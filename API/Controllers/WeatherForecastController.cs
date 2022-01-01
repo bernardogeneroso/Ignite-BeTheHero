@@ -1,4 +1,7 @@
+using Domain;
 using Microsoft.AspNetCore.Mvc;
+using MongoDB.Driver;
+using Persistence;
 
 namespace API.Controllers;
 
@@ -12,9 +15,11 @@ public class WeatherForecastController : ControllerBase
     };
 
     private readonly ILogger<WeatherForecastController> _logger;
+    private readonly IMongoCollection<Record> _context;
 
-    public WeatherForecastController(ILogger<WeatherForecastController> logger)
+    public WeatherForecastController(ILogger<WeatherForecastController> logger, MongoDbContext context)
     {
+        _context = context.GetCollection<Record>("records");
         _logger = logger;
     }
 
