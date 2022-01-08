@@ -11,11 +11,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers(opt =>
 {
-  var policy = new AuthorizationPolicyBuilder("Bearer").RequireAuthenticatedUser().Build();
+  var policy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
   opt.Filters.Add(new AuthorizeFilter(policy));
 }).AddFluentValidation(config =>
 {
-config.RegisterValidatorsFromAssemblyContaining<Create>();
+  config.RegisterValidatorsFromAssemblyContaining<Create>();
 });
 
 builder.Services.AddApplicationServices(builder.Configuration);
@@ -40,6 +40,7 @@ app.UseHttpsRedirection();
 app.UseCors("CorsPolicy");
 
 app.UseAuthentication();
+
 app.UseAuthorization();
 
 app.MapControllers();
