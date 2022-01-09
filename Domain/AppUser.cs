@@ -4,26 +4,30 @@ namespace Domain;
 
 public class AppUser
 {
+  private string role = "Standard";
+
   [BsonId]
   [BsonRepresentation(BsonType.ObjectId)]
   public string Id { get; set; }
   public string Username { get; set; }
   public string Email { get; set; }
   public string Password { get; set; }
-  public string Role { get; set; }
-  /*public string Role
+  public string Role
   {
-    get { return Role; }
+    get
+    {
+      return role;
+    }
     set
     {
-      if (string.IsNullOrEmpty(value) || value != "Admin")
+      if (role == "Admin")
       {
-        Role = "Standard";
+        role = "Admin";
       }
       else
       {
-        Role = value;
+        role = "Standard";
       }
     }
-  }*/
+  }
 }

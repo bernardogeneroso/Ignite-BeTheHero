@@ -1,6 +1,8 @@
 using API.DTOs;
 using API.Services;
+using Application.Interfaces;
 using Domain;
+using Infrastructure.Image;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
@@ -14,9 +16,11 @@ public class AccountController : ControllerBase
 {
   private readonly TokenService _tokenService;
   private readonly IMongoCollection<AppUser> _collection;
+  private readonly IStorageAccessor _storageAccessor;
 
-  public AccountController(TokenService TokenService, MongoDbContext context)
+  public AccountController(TokenService TokenService, MongoDbContext context, IStorageAccessor storageAccessor)
   {
+    _storageAccessor = storageAccessor;
     _tokenService = TokenService;
     _collection = context.GetCollection<AppUser>("users");
   }
@@ -72,5 +76,14 @@ public class AccountController : ControllerBase
     await _collection.InsertOneAsync(newUser);
 
     return Ok();
+  }
+
+  [AllowAnonymous]
+  [HttpPost("image")]
+  public async Task<IActionResult> AddImage([FromForm] IFormFile File)
+  {
+    var imageUrl = await _storageAccessor.AddImage(File);
+
+    return Ok(imageUrl);
   }
 }
