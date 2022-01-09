@@ -1,6 +1,8 @@
 using System.Text;
 using API.Services;
+using Infrastructure.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 
 namespace API.Extensions;
@@ -26,7 +28,14 @@ public static class IdentityServiceExtensions
                     ClockSkew = TimeSpan.Zero
                   };
                 });
-
+    services.AddAuthorization(opt =>
+    {
+      opt.AddPolicy("IsAdministrator", policy =>
+      {
+        policy.Requirements.Add(new IsAdministrator());
+      });
+    });
+    services.AddTransient<IAuthorizationHandler, IsAdministratorHandler>();
     services.AddScoped<TokenService>();
 
     return services;

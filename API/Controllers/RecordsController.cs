@@ -1,6 +1,5 @@
 using Application.Records;
 using Domain;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -26,12 +25,14 @@ public class RecordsController : BaseApiController
     return HandleResult(await Mediator.Send(new Create.Command { Record = record }));
   }
 
+  [Authorize(Policy = "IsAdministrator")]
   [HttpPut("{id}")]
   public async Task<IActionResult> EditRecord(string id, Record record)
   {
     return HandleResult(await Mediator.Send(new Edit.Command { Id = id, Record = record }));
   }
 
+  [Authorize(Policy = "IsAdministrator")]
   [HttpDelete("{id}")]
   public async Task<IActionResult> DeleteRecord(string id)
   {

@@ -1,4 +1,6 @@
+using Application.Interfaces;
 using Application.Records;
+using Infrastructure.Security;
 using MediatR;
 using MongoDB.Driver;
 using Persistence;
@@ -19,15 +21,15 @@ public static class ApplicationServiceExtensions
           opt.AddPolicy("CorsPolicy", policy =>
               {
                 policy
-                        .AllowAnyHeader()
-                        .AllowAnyMethod()
-                        .AllowCredentials()
-                        .WithExposedHeaders("WWW-Authenticate", "Pagination")
-                        .WithOrigins("http://localhost:3000");
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials()
+                    .WithOrigins("http://localhost:3000");
               });
         });
 
     services.AddMediatR(typeof(List.Handler).Assembly);
+    services.AddScoped<IUserAccessor, UserAccessor>();
 
     return services;
   }
