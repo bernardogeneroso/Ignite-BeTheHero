@@ -2,7 +2,6 @@ using API.DTOs;
 using API.Services;
 using Application.Interfaces;
 using Domain;
-using Infrastructure.Image;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
@@ -58,10 +57,9 @@ public class AccountController : ControllerBase
   [HttpPost("register")]
   public async Task<IActionResult> Register(RegisterDto RegisterDto)
   {
-
     var userExist = await _collection.FindAsync(x => x.Email == RegisterDto.Email);
 
-    if (userExist != null) return BadRequest("This email is already in use.");
+    if (userExist.Any()) return BadRequest("This email is already in use.");
 
     var password = BCrypt.Net.BCrypt.HashPassword(RegisterDto.Password);
 
@@ -78,12 +76,21 @@ public class AccountController : ControllerBase
     return Ok();
   }
 
-  [AllowAnonymous]
-  [HttpPost("image")]
+  [HttpPost("avatar")]
   public async Task<IActionResult> AddImage([FromForm] IFormFile File)
   {
-    var imageUrl = await _storageAccessor.AddImage(File);
+    var avatarUrl = await _storageAccessor.AddImage(File);
 
-    return Ok(imageUrl);
+    if (avatarUrl == null) return BadRequest("Could not upload image");
+
+    return Ok(avatarUrl);
+  }
+
+  [HttpDelete("avatar/{filename}")]
+  public async Task<IActionResult> DeleteImage(string filename)
+  {
+    await _storageAccessor.DeleteImage(filename);
+
+    return NoContent();
   }
 }

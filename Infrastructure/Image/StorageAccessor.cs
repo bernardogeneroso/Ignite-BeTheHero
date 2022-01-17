@@ -7,23 +7,22 @@ namespace Infrastructure.Image;
 
 public class StorageAccessor : IStorageAccessor
 {
-  private readonly IConfiguration _config;
-  private readonly BlobServiceClient _blobServiceClient;
+  private readonly BlobContainerClient _blobContainerClient;
 
   public StorageAccessor(BlobServiceClient blobServiceClient, IConfiguration config)
   {
-    _blobServiceClient = blobServiceClient;
-    _config = config;
+    var containerName = config["Storage:ContainerName"];
+
+    _blobContainerClient = blobServiceClient.GetBlobContainerClient(containerName);
   }
 
   public async Task<string> AddImage(IFormFile file)
   {
     if (file.Length > 0)
     {
-      var containerName = _config["Storage:ContainerName"];
+      if (!_blobContainerClient.Exists()) return null;
 
-      var containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
-      var blobClient = containerClient.GetBlobClient(file.FileName);
+      var blobClient = _blobContainerClient.GetBlobClient(file.FileName);
 
       using var stream = file.OpenReadStream();
       await blobClient.UploadAsync(stream, true);
@@ -34,8 +33,14 @@ public class StorageAccessor : IStorageAccessor
     return null;
   }
 
-  public Task<string> DeleteImage(string publicId)
+  public async Task DeleteImage(string filename)
   {
-    throw new NotImplementedException();
+    if (!_blobContainerClient.Exists()) return;
+
+    var blobClient = _blobContainerClient.GetBlobClient(filename);
+
+    await blobClient.DeleteIfExistsAsync();
+
+    return;
   }
 }

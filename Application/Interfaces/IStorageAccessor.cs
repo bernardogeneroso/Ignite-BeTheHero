@@ -5,5 +5,5 @@ namespace Application.Interfaces;
 public interface IStorageAccessor
 {
   Task<string> AddImage(IFormFile file);
-  Task<string> DeleteImage(string publicId);
+  Task DeleteImage(string filename);
 }
