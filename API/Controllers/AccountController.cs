@@ -27,9 +27,25 @@ public class AccountController : ControllerBase
   }
 
   [HttpGet]
-  public IActionResult GetUser()
+  public async Task<ActionResult<ProfileDto>> GetUser()
   {
-    return Ok();
+    var user = await _collection.Find(u => u.Email == _userAccessor.GetEmail()).FirstOrDefaultAsync();
+
+    if (user == null)
+    {
+      return NotFound();
+    }
+
+    return Ok(
+      new ProfileDto
+      {
+        Username = user.Username,
+        Email = user.Email,
+        AvatarUrl = user.AvatarUrl,
+        AvatarName = user.AvatarName,
+        Role = user.Role
+      }
+    );
   }
 
   [AllowAnonymous]
