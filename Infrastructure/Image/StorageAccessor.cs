@@ -22,12 +22,14 @@ public class StorageAccessor : IStorageAccessor
     {
       if (!_blobContainerClient.Exists()) return null;
 
-      var blobClient = _blobContainerClient.GetBlobClient(file.FileName);
+      var fileName = $"{Guid.NewGuid()}_{file.FileName}";
+
+      var blobClient = _blobContainerClient.GetBlobClient(fileName);
 
       using var stream = file.OpenReadStream();
       await blobClient.UploadAsync(stream, true);
 
-      return blobClient.Uri.ToString();
+      return blobClient.Uri.AbsoluteUri;
     }
 
     return null;

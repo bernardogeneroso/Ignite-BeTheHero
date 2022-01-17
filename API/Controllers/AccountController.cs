@@ -16,9 +16,11 @@ public class AccountController : ControllerBase
   private readonly TokenService _tokenService;
   private readonly IMongoCollection<AppUser> _collection;
   private readonly IStorageAccessor _storageAccessor;
+  private readonly IUserAccessor _userAccessor;
 
-  public AccountController(TokenService TokenService, MongoDbContext context, IStorageAccessor storageAccessor)
+  public AccountController(TokenService TokenService, MongoDbContext context, IStorageAccessor storageAccessor, IUserAccessor userAccessor)
   {
+    _userAccessor = userAccessor;
     _storageAccessor = storageAccessor;
     _tokenService = TokenService;
     _collection = context.GetCollection<AppUser>("users");
@@ -79,9 +81,23 @@ public class AccountController : ControllerBase
   [HttpPost("avatar")]
   public async Task<IActionResult> AddImage([FromForm] IFormFile File)
   {
+    var user = await _collection.Find(x => x.Email == _userAccessor.GetEmail()).FirstOrDefaultAsync();
+
+    if (user == null) return BadRequest("Could not upload image");
+
+    if (user.AvatarName != null)
+    {
+      await _storageAccessor.DeleteImage(user.AvatarName);
+    }
+
     var avatarUrl = await _storageAccessor.AddImage(File);
 
     if (avatarUrl == null) return BadRequest("Could not upload image");
+
+    user.AvatarUrl = avatarUrl;
+    user.AvatarName = avatarUrl.Split('/').Last();
+
+    await _collection.ReplaceOneAsync(x => x.Id == user.Id, user);
 
     return Ok(avatarUrl);
   }
@@ -89,7 +105,16 @@ public class AccountController : ControllerBase
   [HttpDelete("avatar/{filename}")]
   public async Task<IActionResult> DeleteImage(string filename)
   {
+    var user = await _collection.Find(x => x.Email == _userAccessor.GetEmail()).FirstOrDefaultAsync();
+
+    if (user == null) return BadRequest("Could not delete image");
+
     await _storageAccessor.DeleteImage(filename);
+
+    user.AvatarUrl = null;
+    user.AvatarName = null;
+
+    await _collection.ReplaceOneAsync(x => x.Id == user.Id, user);
 
     return NoContent();
   }
